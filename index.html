@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orxvault - Premier Digital Asset Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar hiding */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+
+      @keyframes fade-in-out {
+        0% { opacity: 0; transform: translateY(10px); }
+        10% { opacity: 1; transform: translateY(0); }
+        90% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(10px); }
+      }
+      .animate-fade-in-out {
+        animation: fade-in-out 3s ease-in-out forwards;
+      }
+      
+      @keyframes slide-in-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      .animate-slide-in-up {
+        animation: slide-in-up 0.3s ease-out forwards;
+      }
+
+      /* New Toast Animations */
+      @keyframes slide-in-bottom-right {
+        from { transform: translate(100%, 100%); opacity: 0; }
+        to { transform: translate(0, 0); opacity: 1; }
+      }
+      @keyframes fade-out {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      .animate-slide-in-then-fade-out {
+        animation: slide-in-bottom-right 0.5s ease-out forwards, fade-out 0.5s ease-in 2.5s forwards;
+      }
+
+      /* New Chat Widget Animation */
+      @keyframes slide-in-br {
+        from { opacity: 0; transform: translate(20px, 20px); }
+        to { opacity: 1; transform: translate(0, 0); }
+      }
+      .animate-slide-in-br {
+        animation: slide-in-br 0.3s ease-out forwards;
+      }
+
+
+      /* Theme Variables */
+      :root {
+        --background-primary: #13131A;
+        --background-secondary: #1C1C24;
+        --background-primary-translucent: rgba(19, 19, 26, 0.8);
+        --background-secondary-translucent: rgba(28, 28, 36, 0.8);
+        --text-primary: #FFFFFF;
+        --text-secondary: #D1D5DB; /* gray-300 */
+        --text-muted: #9CA3AF; /* gray-400 */
+        --text-faint: #6B7280; /* gray-500 */
+        --accent-primary: #D97706; /* amber-600 */
+        --accent-secondary: #F59E0B; /* amber-500 */
+        --accent-text: #FBBF24; /* amber-400 */
+        --accent-primary-translucent: rgba(217, 119, 6, 0.2);
+        --border-color: #1F2937; /* gray-800 */
+        --border-color-light: #374151; /* gray-700 */
+        --shadow-color: rgba(251, 191, 36, 0.2);
+        --error-bg: rgba(153, 27, 27, 0.5); /* red-900/50 */
+        --error-border: #EF4444; /* red-500 */
+        --error-text-header: #FCA5A5; /* red-300 */
+        --error-text-body: #F87171; /* red-400 */
+
+        /* Button Colors */
+        --button-primary-bg: #111827; /* gray-900 */
+        --button-primary-text: #FFFFFF;
+        --button-secondary-bg: #1F2937; /* gray-800 */
+        --button-secondary-text: var(--text-secondary);
+        --button-tertiary-bg: rgba(99, 102, 241, 0.1); /* indigo-400/10 */
+        --button-tertiary-text: #A5B4FC; /* indigo-300 */
+      }
+
+      .light-theme {
+        --background-primary: #FFFFFF;
+        --background-secondary: #F9FAFB; /* gray-50 */
+        --background-primary-translucent: rgba(255, 255, 255, 0.8);
+        --background-secondary-translucent: rgba(249, 250, 251, 0.8);
+        --text-primary: #111827; /* gray-900 */
+        --text-secondary: #374151; /* gray-700 */
+        --text-muted: #6B7280; /* gray-500 */
+        --text-faint: #9CA3AF; /* gray-400 */
+        --accent-primary: #D97706; /* amber-600 */
+        --accent-secondary: #F59E0B; /* amber-500 */
+        --accent-text: #B45309; /* amber-700 */
+        --accent-primary-translucent: rgba(217, 119, 6, 0.1);
+        --border-color: #E5E7EB; /* gray-200 */
+        --border-color-light: #D1D5DB; /* gray-300 */
+        --shadow-color: rgba(217, 119, 6, 0.2);
+        --error-bg: #FEF2F2; /* red-50 */
+        --error-border: #FCA5A5; /* red-300 */
+        --error-text-header: #991B1B; /* red-800 */
+        --error-text-body: #B91C1C; /* red-700 */
+
+        /* Button Colors */
+        --button-primary-bg: #111827; /* gray-900 */
+        --button-primary-text: #FFFFFF;
+        --button-secondary-bg: #111827; /* gray-900 - Dark Details button */
+        --button-secondary-text: #FFFFFF;
+        --button-tertiary-bg: #F9FAFB; /* gray-50 */
+        --button-tertiary-text: var(--text-primary);
+      }
+
+      /* Custom styles for text content pages */
+      .page-content .content-body h2 {
+        font-size: 1.5rem; /* 24px */
+        line-height: 2rem; /* 32px */
+        font-weight: 700;
+        padding-top: 1rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+      .page-content .content-body p {
+        line-height: 1.75;
+        margin-bottom: 1.25em;
+        color: var(--text-secondary);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.13.0",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "nft.storage": "https://esm.sh/nft.storage@^7.1.1",
+    "p-queue": "https://esm.sh/p-queue@^7.4.1",
+    "recharts": "https://esm.sh/recharts@^2.12.7",
+    "ethers": "https://esm.sh/ethers@^6.13.1"
+  }
+}
+</script>
+</head>
+  <body class="bg-[var(--background-primary)] text-[var(--text-primary)] transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+    <!-- Smartsupp Live Chat script -->
+    <script type="text/javascript">
+      var _smartsupp = _smartsupp || {};
+      _smartsupp.key = 'YOUR_SMARTSUPP_KEY';
+      window.smartsupp||(function(d) {
+        var s,c,o=window.smartsupp=function(){ o.call.apply(o,arguments)};o.call=function(){o.call.queue.push(arguments)};o.call.queue=[];c=d.createElement('script');c.async=true;c.type='text/javascript';c.src='https://www.smartsuppchat.com/loader.js?';s=d.getElementsByTagName('script')[0];s.parentNode.insertBefore(c,s);
+      })(document);
+    </script>
+  </body>
+</html>

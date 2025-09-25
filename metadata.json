@@ -1,0 +1,9 @@
+{
+  "name": "Orxvault",
+  "description": "Orxvault: A premier marketplace to secure, trade, and showcase exclusive digital assets. Explore the vault of rare collectibles, digital art, and more, all curated by Gemini.",
+  "requestFramePermissions": [],
+  "env": [
+    "API_KEY"
+  ],
+  "prompt": ""
+}
