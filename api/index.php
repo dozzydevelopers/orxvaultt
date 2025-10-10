@@ -215,6 +215,11 @@ switch (true) {
         $u = current_user();
         if (!$u) bad_request('Invalid or missing token');
         $b = read_body_json();
+        // Enforce mint/upload fee payment proof (off-chain for shared hosting)
+        $paid = (float)($b['mintFeePaidEth'] ?? 0);
+        if ($paid < MINT_FEE_ETH) {
+            bad_request('Mint/upload fee not paid.');
+        }
         $id = $b['itemId'] ?? $b['id'] ?? strtolower(bin2hex(random_bytes(8)));
         $stmt = db()->prepare('INSERT INTO nfts (id, token_id, nft_contract, name, creator, owner, price_eth, price_usd, image_url, category, is_verified, description, created_at, collection_id, is_auction, auction_end, current_bid_eth, token_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)');
         $stmt->execute([
@@ -245,9 +250,25 @@ switch (true) {
         $b = read_body_json();
         $itemId = $b['itemId'] ?? $b['id'] ?? '';
         $buyer = $b['buyerAddress'] ?? '';
-        if (!$itemId || !$buyer) bad_request('itemId and buyerAddress required');
-        db()->prepare('UPDATE nfts SET owner = ? WHERE id = ?')->execute([$buyer, $itemId]);
-        send_json(['success' => true]);
+        $priceEth = isset($b['priceEth']) ? (float)$b['priceEth'] : null;
+        if (!$itemId || !$buyer || $priceEth === null) bad_request('itemId, buyerAddress and priceEth required');
+        // Commission calculation
+        $commissionEth = $priceEth * (COMMISSION_PERCENT / 100.0);
+        // Record sale and update ownership
+        db()->prepare('UPDATE nfts SET owner = ?, current_bid_eth = NULL, is_auction = 0, auction_end = NULL WHERE id = ?')->execute([$buyer, $itemId]);
+        // Credit seller and platform in a simple ledger (create table if needed)
+        db()->exec('CREATE TABLE IF NOT EXISTS ledger (id INT AUTO_INCREMENT PRIMARY KEY, account_id VARCHAR(64), amount_eth DECIMAL(38,18), nft_id VARCHAR(64), created_at DATETIME)');
+        // Fetch seller (previous owner)
+        $prev = db()->prepare('SELECT owner FROM nfts WHERE id = ?');
+        $prev->execute([$itemId]);
+        $row = $prev->fetch();
+        $seller = $row ? $row['owner'] : null;
+        if ($seller) {
+            $sellerNet = max(0.0, $priceEth - $commissionEth);
+            $ins = db()->prepare('INSERT INTO ledger (account_id, amount_eth, nft_id, created_at) VALUES (?, ?, ?, NOW()), (?, ?, ?, NOW())');
+            $ins->execute([$seller, $sellerNet, $itemId, PLATFORM_ACCOUNT_ID, $commissionEth, $itemId]);
+        }
+        send_json(['success' => true, 'commissionEth' => $commissionEth]);
         break;
 
     case preg_match('#^/nfts/([^/]+)$#', $sub, $m) && $method === 'PUT':
