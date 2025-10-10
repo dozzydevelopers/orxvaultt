@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS nfts (
   auction_end DATETIME NULL,
   current_bid_eth DECIMAL(38,18) NULL,
   token_uri VARCHAR(255) NULL,
+  validation_status ENUM('approved','pending','rejected','flagged') DEFAULT 'pending',
   INDEX (creator),
   INDEX (owner),
   INDEX (category),

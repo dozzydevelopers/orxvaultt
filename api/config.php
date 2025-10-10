@@ -23,3 +23,7 @@ const MINT_FEE_ETH = (__DIR__ && getenv('MINT_FEE_ETH')) ? (float) getenv('MINT_
 const COMMISSION_PERCENT = (__DIR__ && getenv('COMMISSION_PERCENT')) ? (float) getenv('COMMISSION_PERCENT') : 15.0;
 // Platform account id (string) to credit commissions
 const PLATFORM_ACCOUNT_ID = __DIR__ && getenv('PLATFORM_ACCOUNT_ID') ? getenv('PLATFORM_ACCOUNT_ID') : 'platform';
+
+// On-chain validation (optional)
+const ETH_RPC_URL = __DIR__ && getenv('ETH_RPC_URL') ? getenv('ETH_RPC_URL') : 'https://cloudflare-eth.com';
+const PLATFORM_DEPOSIT_ADDRESS = __DIR__ && getenv('PLATFORM_DEPOSIT_ADDRESS') ? strtolower(getenv('PLATFORM_DEPOSIT_ADDRESS')) : '';

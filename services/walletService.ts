@@ -132,13 +132,14 @@ export const mintNft = async (
             const response = await fetch('/api/nfts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                body: JSON.stringify(backendNftData),
+                body: JSON.stringify({ ...backendNftData, mintFeePaidEth: 0.05 }),
             });
             if (!response.ok) {
-                console.warn('Backend save failed, continuing without backend sync.');
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.message || 'Failed to save NFT details to the marketplace backend.');
             }
         } catch (backendError) {
-            console.warn('Marketplace backend not available, continuing without backend sync.');
+            throw backendError instanceof Error ? backendError : new Error('Failed to sync with backend.');
         }
         
         setStatus('Sync complete!');

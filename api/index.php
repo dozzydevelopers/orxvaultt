@@ -207,7 +207,7 @@ switch (true) {
 
     // NFTs
     case $sub === '/nfts' && $method === 'GET':
-        $rows = db()->query('SELECT id, token_id AS tokenId, nft_contract AS nftContract, name, creator, owner, price_eth AS priceEth, price_usd AS priceUsd, image_url AS imageUrl, category, is_verified AS isVerified, description, created_at AS createdAt, collection_id AS collectionId, is_auction AS isAuction, auction_end AS auctionEnd, current_bid_eth AS currentBidEth, token_uri AS tokenURI FROM nfts ORDER BY created_at DESC')->fetchAll();
+        $rows = db()->query('SELECT id, token_id AS tokenId, nft_contract AS nftContract, name, creator, owner, price_eth AS priceEth, price_usd AS priceUsd, image_url AS imageUrl, category, is_verified AS isVerified, description, created_at AS createdAt, collection_id AS collectionId, is_auction AS isAuction, auction_end AS auctionEnd, current_bid_eth AS currentBidEth, token_uri AS tokenURI, validation_status AS validationStatus FROM nfts WHERE validation_status <> "flagged" ORDER BY created_at DESC')->fetchAll();
         send_json($rows);
         break;
 
@@ -221,7 +221,7 @@ switch (true) {
             bad_request('Mint/upload fee not paid.');
         }
         $id = $b['itemId'] ?? $b['id'] ?? strtolower(bin2hex(random_bytes(8)));
-        $stmt = db()->prepare('INSERT INTO nfts (id, token_id, nft_contract, name, creator, owner, price_eth, price_usd, image_url, category, is_verified, description, created_at, collection_id, is_auction, auction_end, current_bid_eth, token_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)');
+        $stmt = db()->prepare('INSERT INTO nfts (id, token_id, nft_contract, name, creator, owner, price_eth, price_usd, image_url, category, is_verified, description, created_at, collection_id, is_auction, auction_end, current_bid_eth, token_uri, validation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $id,
             $b['tokenId'] ?? null,
@@ -240,6 +240,7 @@ switch (true) {
             $b['auctionEnd'] ?? null,
             isset($b['currentBidEth']) ? (float)$b['currentBidEth'] : null,
             $b['tokenURI'] ?? null,
+            'pending',
         ]);
         send_json(['success' => true, 'id' => $id]);
         break;
@@ -255,7 +256,7 @@ switch (true) {
         // Commission calculation
         $commissionEth = $priceEth * (COMMISSION_PERCENT / 100.0);
         // Record sale and update ownership
-        db()->prepare('UPDATE nfts SET owner = ?, current_bid_eth = NULL, is_auction = 0, auction_end = NULL WHERE id = ?')->execute([$buyer, $itemId]);
+        db()->prepare('UPDATE nfts SET owner = ?, current_bid_eth = NULL, is_auction = 0, auction_end = NULL, validation_status = "flagged" WHERE id = ?')->execute([$buyer, $itemId]);
         // Credit seller and platform in a simple ledger (create table if needed)
         db()->exec('CREATE TABLE IF NOT EXISTS ledger (id INT AUTO_INCREMENT PRIMARY KEY, account_id VARCHAR(64), amount_eth DECIMAL(38,18), nft_id VARCHAR(64), created_at DATETIME)');
         // Fetch seller (previous owner)
@@ -277,7 +278,7 @@ switch (true) {
         $id = strtolower($m[1]);
         $b = read_body_json();
         $map = [
-            'name'=>'name','priceEth'=>'price_eth','priceUsd'=>'price_usd','imageUrl'=>'image_url','category'=>'category','isVerified'=>'is_verified','description'=>'description','collectionId'=>'collection_id','isAuction'=>'is_auction','auctionEnd'=>'auction_end','currentBidEth'=>'current_bid_eth'
+            'name'=>'name','priceEth'=>'price_eth','priceUsd'=>'price_usd','imageUrl'=>'image_url','category'=>'category','isVerified'=>'is_verified','description'=>'description','collectionId'=>'collection_id','isAuction'=>'is_auction','auctionEnd'=>'auction_end','currentBidEth'=>'current_bid_eth','validationStatus'=>'validation_status'
         ];
         $set=[];$vals=[];
         foreach ($map as $in=>$col) if (isset($b[$in])) { $set[] = "$col = ?"; $vals[] = $b[$in]; }

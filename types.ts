@@ -29,7 +29,7 @@ export interface Nft {
   creatorUsername?: string;
   creatorAvatar?: string;
   ownerUsername?: string;
-  validationStatus?: 'approved' | 'pending' | 'rejected';
+  validationStatus?: 'approved' | 'pending' | 'rejected' | 'flagged';
   moderationStatus?: 'approved' | 'pending' | 'rejected';
 }
 
@@ -50,6 +50,7 @@ export interface User {
   balanceEth: number; // This would be fetched from the provider
   isWalletConnected?: boolean;
   isBanned?: boolean;
+  isRestricted?: boolean;
 }
 
 export interface Collection {
