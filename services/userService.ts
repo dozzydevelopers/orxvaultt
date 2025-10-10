@@ -1,5 +1,6 @@
 
 import type { User } from '../types';
+import { apiFetchWithFallback } from './utils';
 
 /**
  * Fetches all users from the backend API.
@@ -7,7 +8,7 @@ import type { User } from '../types';
  */
 export const getUsers = async (): Promise<User[]> => {
     try {
-        const response = await fetch('/api/users');
+        const response = await apiFetchWithFallback('/users');
         if (!response.ok) {
             throw new Error(`Failed to fetch users: ${response.statusText}`);
         }
@@ -26,7 +27,7 @@ export const getUsers = async (): Promise<User[]> => {
  */
 export const getUserProfile = async (userId: string): Promise<User | null> => {
     try {
-        const response = await fetch(`/api/users/${userId}`);
+        const response = await apiFetchWithFallback(`/users/${userId}`);
          if (!response.ok) {
             return null;
         }

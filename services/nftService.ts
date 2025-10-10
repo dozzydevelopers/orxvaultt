@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import type { Nft } from "../types";
 import { getAuctionOverlay } from './auctionService';
 import { connectRealWallet } from './walletService';
+import { apiFetchWithFallback } from './utils';
 import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
 
 
@@ -12,7 +13,7 @@ import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
  */
 export const getNfts = async (): Promise<Nft[]> => {
     try {
-        const response = await fetch('/api/nfts');
+        const response = await apiFetchWithFallback('/nfts');
         if (!response.ok) {
             throw new Error(`Failed to fetch NFTs: ${response.statusText}`);
         }
@@ -50,13 +51,10 @@ export const buyNft = async (nft: Nft): Promise<ethers.TransactionReceipt> => {
 
         // Notify backend of the sale to update the database
         try {
-            const response = await fetch(`/api/nfts/purchase`, {
+            const response = await apiFetchWithFallback(`/nfts/purchase`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                body: JSON.stringify({ 
-                    itemId: nft.id, 
-                    buyerAddress: buyerAddress 
-                }),
+                body: JSON.stringify({ itemId: nft.id, buyerAddress: buyerAddress, priceEth: nft.priceEth }),
             });
             if (!response.ok) {
                  console.warn("On-chain purchase succeeded, but failed to update marketplace backend.");

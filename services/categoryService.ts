@@ -1,5 +1,6 @@
 
 import type { Category } from '../types';
+import { apiFetchWithFallback } from './utils';
 
 /**
  * Fetches all categories from the backend API.
@@ -7,7 +8,7 @@ import type { Category } from '../types';
  */
 export const getCategories = async (): Promise<Category[]> => {
     try {
-        const response = await fetch('/api/categories');
+        const response = await apiFetchWithFallback('/categories');
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('API Error Body:', errorBody);
