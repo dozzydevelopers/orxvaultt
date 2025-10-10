@@ -34,6 +34,8 @@ const ConnectWalletPrompt: React.FC<{ onConnect: () => Promise<boolean> }> = ({ 
 
 const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+    const [depositAddress, setDepositAddress] = useState<string | null>(null);
+    const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
     const { linkWallet } = useAuth();
 
     if (!user.isWalletConnected) {
@@ -47,7 +49,9 @@ const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
 
     return (
         <div className="animate-fade-in space-y-8">
-            {isDepositModalOpen && user.walletAddress && <DepositModal address={user.walletAddress} onClose={() => setIsDepositModalOpen(false)} />}
+            {isDepositModalOpen && depositAddress && (
+                <DepositModal address={depositAddress} expiresAt={expiresAt} onClose={() => setIsDepositModalOpen(false)} />
+            )}
             
             <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)]">Dashboard</h1>
             
@@ -56,7 +60,23 @@ const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
                     <p className="text-[var(--text-faint)] font-medium">Account Balance</p>
                     <p className="text-4xl font-bold">{user.balanceEth.toFixed(4)} ETH</p>
                     <div className="flex gap-3">
-                        <button onClick={() => setIsDepositModalOpen(true)} className="flex-1 bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm">Deposit</button>
+                        <button 
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch('/api/deposits/assign', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }});
+                                    if (!res.ok) throw new Error('Failed to get deposit address');
+                                    const data = await res.json();
+                                    setDepositAddress(data.address);
+                                    setExpiresAt(data.expiresAt);
+                                    setIsDepositModalOpen(true);
+                                } catch {
+                                    // ignore
+                                }
+                            }} 
+                            className="flex-1 bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm"
+                        >
+                            Deposit
+                        </button>
                         <a href="/create" className="flex-1 text-center bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm">Mint</a>
                         <a href="/dashboard/withdrawal" className="flex-1 text-center bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm">Withdraw</a>
                     </div>

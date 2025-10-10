@@ -60,3 +60,13 @@ CREATE TABLE IF NOT EXISTS nfts (
   INDEX (category),
   INDEX (collection_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Deposit address pool for rotating user deposit assignments
+CREATE TABLE IF NOT EXISTS deposit_pool (
+  address VARCHAR(64) PRIMARY KEY,
+  is_active TINYINT(1) DEFAULT 1,
+  assigned_to VARCHAR(64) NULL,
+  assigned_until DATETIME NULL,
+  INDEX (assigned_to),
+  INDEX (assigned_until)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

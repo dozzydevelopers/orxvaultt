@@ -299,5 +299,32 @@ switch (true) {
         break;
 
     default:
+        // Deposit address assignment endpoints
+        if ($sub === '/deposits/assign' && $method === 'POST') {
+            $u = current_user();
+            if (!$u) bad_request('Invalid or missing token');
+            // release any expired
+            db()->exec('UPDATE deposit_pool SET assigned_to = NULL, assigned_until = NULL WHERE assigned_until IS NOT NULL AND assigned_until < NOW()');
+            // try to reuse current assignment if still valid
+            $check = db()->prepare('SELECT address, assigned_until FROM deposit_pool WHERE assigned_to = ? AND assigned_until > NOW() LIMIT 1');
+            $check->execute([$u['id']]);
+            $existing = $check->fetch();
+            if ($existing) {
+                send_json(['address' => $existing['address'], 'expiresAt' => $existing['assigned_until']]);
+            }
+            // assign a free address
+            $free = db()->query('SELECT address FROM deposit_pool WHERE is_active = 1 AND assigned_to IS NULL LIMIT 1')->fetch();
+            if (!$free) bad_request('No deposit addresses available');
+            $expires = date('Y-m-d H:i:s', time() + 5 * 60); // 5 minutes
+            $upd = db()->prepare('UPDATE deposit_pool SET assigned_to = ?, assigned_until = ? WHERE address = ?');
+            $upd->execute([$u['id'], $expires, $free['address']]);
+            send_json(['address' => $free['address'], 'expiresAt' => $expires]);
+        }
+        if (preg_match('#^/deposits/release/(0x[a-fA-F0-9]{40})$#', $sub, $m) && $method === 'POST') {
+            $addr = strtolower($m[1]);
+            $rel = db()->prepare('UPDATE deposit_pool SET assigned_to = NULL, assigned_until = NULL WHERE LOWER(address) = ?');
+            $rel->execute([$addr]);
+            send_json(['success' => true]);
+        }
         not_found('Endpoint not found');
 }
