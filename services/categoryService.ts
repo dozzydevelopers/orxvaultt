@@ -7,9 +7,10 @@ import type { Category } from '../types';
  */
 export const getCategories = async (): Promise<Category[]> => {
     try {
-        // Use local static JSON fallback to avoid broken /api backend
-        const response = await fetch('/categories.json');
+        const response = await fetch('/api/categories');
         if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('API Error Body:', errorBody);
             throw new Error(`Failed to fetch categories: ${response.statusText}`);
         }
         const categories: Category[] = await response.json();

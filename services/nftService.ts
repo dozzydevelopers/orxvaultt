@@ -12,7 +12,7 @@ import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
  */
 export const getNfts = async (): Promise<Nft[]> => {
     try {
-        const response = await fetch('/nfts.json');
+        const response = await fetch('/api/nfts');
         if (!response.ok) {
             throw new Error(`Failed to fetch NFTs: ${response.statusText}`);
         }

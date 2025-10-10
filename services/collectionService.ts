@@ -7,7 +7,7 @@ import type { Collection } from '../types';
  */
 export const getCollections = async (): Promise<Collection[]> => {
     try {
-        const response = await fetch('/collections.json');
+        const response = await fetch('/api/collections');
         if (!response.ok) {
             throw new Error(`Failed to fetch collections: ${response.statusText}`);
         }

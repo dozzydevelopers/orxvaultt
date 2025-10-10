@@ -44,6 +44,15 @@ switch (true) {
         send_json(read_json_file('users'));
         break;
 
+    case $sub === '/users' && $method === 'POST':
+        $body = read_body_json();
+        if (!isset($body['id'])) $body['id'] = generate_id('user');
+        $users = read_json_file('users');
+        $users[] = $body;
+        write_json_file('users', $users);
+        send_json($body, 201);
+        break;
+
     case preg_match('#^/users/([^/]+)$#', $sub, $m) && $method === 'GET':
         $id = strtolower($m[1]);
         $users = read_json_file('users');
@@ -53,6 +62,27 @@ switch (true) {
             }
         }
         not_found('User not found');
+        break;
+
+    case preg_match('#^/users/([^/]+)$#', $sub, $m) && $method === 'PUT':
+        $id = strtolower($m[1]);
+        $body = read_body_json();
+        $users = read_json_file('users');
+        $idx = array_find_index_by_id($users, $id);
+        if ($idx < 0) not_found('User not found');
+        $users[$idx] = array_merge($users[$idx], $body);
+        write_json_file('users', $users);
+        send_json($users[$idx]);
+        break;
+
+    case preg_match('#^/users/([^/]+)$#', $sub, $m) && $method === 'DELETE':
+        $id = strtolower($m[1]);
+        $users = read_json_file('users');
+        $idx = array_find_index_by_id($users, $id);
+        if ($idx < 0) not_found('User not found');
+        array_splice($users, $idx, 1);
+        write_json_file('users', $users);
+        send_json(['success' => true]);
         break;
 
     case $sub === '/users/link-wallet' && $method === 'POST':
@@ -77,6 +107,15 @@ switch (true) {
         send_json(read_json_file('collections'));
         break;
 
+    case $sub === '/collections' && $method === 'POST':
+        $body = read_body_json();
+        if (!isset($body['id'])) $body['id'] = generate_id('col');
+        $cols = read_json_file('collections');
+        $cols[] = $body;
+        write_json_file('collections', $cols);
+        send_json($body, 201);
+        break;
+
     // NFTs
     case $sub === '/nfts' && $method === 'GET':
         send_json(read_json_file('nfts'));
@@ -86,6 +125,7 @@ switch (true) {
         if (!bearer_token()) bad_request('Missing token');
         $body = read_body_json();
         $nfts = read_json_file('nfts');
+        if (!isset($body['id'])) $body['id'] = generate_id('item');
         $nfts[] = $body;
         write_json_file('nfts', $nfts);
         send_json(['success' => true]);
@@ -94,6 +134,29 @@ switch (true) {
     case $sub === '/nfts/purchase' && $method === 'POST':
         if (!bearer_token()) bad_request('Missing token');
         // In a real backend, ownership transfer would be validated on-chain
+        send_json(['success' => true]);
+        break;
+
+    case preg_match('#^/nfts/([^/]+)$#', $sub, $m) && $method === 'PUT':
+        if (!bearer_token()) bad_request('Missing token');
+        $id = strtolower($m[1]);
+        $body = read_body_json();
+        $nfts = read_json_file('nfts');
+        $idx = array_find_index_by_id($nfts, $id);
+        if ($idx < 0) not_found('NFT not found');
+        $nfts[$idx] = array_merge($nfts[$idx], $body);
+        write_json_file('nfts', $nfts);
+        send_json($nfts[$idx]);
+        break;
+
+    case preg_match('#^/nfts/([^/]+)$#', $sub, $m) && $method === 'DELETE':
+        if (!bearer_token()) bad_request('Missing token');
+        $id = strtolower($m[1]);
+        $nfts = read_json_file('nfts');
+        $idx = array_find_index_by_id($nfts, $id);
+        if ($idx < 0) not_found('NFT not found');
+        array_splice($nfts, $idx, 1);
+        write_json_file('nfts', $nfts);
         send_json(['success' => true]);
         break;
 

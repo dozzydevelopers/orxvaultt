@@ -7,7 +7,7 @@ import type { User } from '../types';
  */
 export const getUsers = async (): Promise<User[]> => {
     try {
-        const response = await fetch('/users.json');
+        const response = await fetch('/api/users');
         if (!response.ok) {
             throw new Error(`Failed to fetch users: ${response.statusText}`);
         }
@@ -26,10 +26,12 @@ export const getUsers = async (): Promise<User[]> => {
  */
 export const getUserProfile = async (userId: string): Promise<User | null> => {
     try {
-        // For local JSON fallback, fetch all and filter
-        const users = await getUsers();
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
-        return user || null;
+        const response = await fetch(`/api/users/${userId}`);
+         if (!response.ok) {
+            return null;
+        }
+        const user: User = await response.json();
+        return user;
     } catch (error) {
         console.error(`Could not get user profile for ${userId}:`, error);
         return null;

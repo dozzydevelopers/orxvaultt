@@ -41,11 +41,24 @@ function read_json_file(string $name): array {
 
 function write_json_file(string $name, array $data): bool {
     $path = storage_path($name);
+    $dir = dirname($path);
+    if (!is_dir($dir)) @mkdir($dir, 0777, true);
     $tmp = $path . '.tmp';
     $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     if ($json === false) return false;
-    file_put_contents($tmp, $json);
-    return rename($tmp, $path);
+    $fp = fopen($tmp, 'c+');
+    if ($fp) {
+        if (flock($fp, LOCK_EX)) {
+            ftruncate($fp, 0);
+            fwrite($fp, $json);
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+    } else {
+        file_put_contents($tmp, $json);
+    }
+    return @rename($tmp, $path);
 }
 
 function bearer_token(): ?string {
@@ -62,4 +75,16 @@ function method_not_allowed(): void { send_json(['message' => 'Method not allowe
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     send_json(['ok' => true], 200);
+}
+
+function generate_id(string $prefix = ''): string {
+    $uniq = bin2hex(random_bytes(8));
+    return $prefix ? ($prefix . '_' . $uniq) : $uniq;
+}
+
+function array_find_index_by_id(array $items, string $id): int {
+    foreach ($items as $i => $it) {
+        if (isset($it['id']) && strtolower($it['id']) === strtolower($id)) return $i;
+    }
+    return -1;
 }
