@@ -382,6 +382,33 @@ switch (true) {
             db()->prepare('UPDATE deposit_pool SET is_active = ? WHERE LOWER(address) = ?')->execute([$active, $addr]);
             send_json(['success' => true]);
         }
+        // Admin: bulk import categories
+        if ($sub === '/admin/categories/bulk' && $method === 'POST') {
+            $u = current_user();
+            if (!$u || $u['role'] !== 'Admin') bad_request('Admin required');
+            $b = read_body_json();
+            $items = $b['items'] ?? [];
+            $base = rtrim((string)($b['baseUrl'] ?? ''), '/');
+            if (!is_array($items) || !count($items)) bad_request('items required');
+            $ins = db()->prepare('INSERT INTO categories (name, image_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE image_url = VALUES(image_url)');
+            foreach ($items as $it) {
+                if (!is_array($it)) continue;
+                $name = $it['name'] ?? null;
+                $image = $it['image'] ?? null;
+                if (!$name) {
+                    $slug = $it['slug'] ?? null;
+                    $ext = $it['ext'] ?? 'png';
+                    if ($slug && $base) {
+                        $name = ucwords(str_replace(['-', '_'], ' ', $slug));
+                        $image = $base . '/' . $slug . '.' . $ext;
+                    }
+                }
+                if ($name && $image) {
+                    $ins->execute([$name, $image]);
+                }
+            }
+            send_json(['success' => true]);
+        }
         // External mint from a partner URL (fetch metadata JSON from URL)
         if ($sub === '/admin/mint-from-url' && $method === 'POST') {
             $u = current_user();
