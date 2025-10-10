@@ -50,6 +50,16 @@ export const getWalletBalance = async (provider: ethers.BrowserProvider, address
 };
 
 /**
+ * Fetches ETH balance using a public RPC when wallet is not connected.
+ */
+export const getBalanceViaPublicRpc = async (address: string, rpcUrl: string = 'https://cloudflare-eth.com'): Promise<number> => {
+    if (!ethers.isAddress(address)) return 0;
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const balance = await provider.getBalance(address);
+    return parseFloat(ethers.formatEther(balance));
+};
+
+/**
  * Mints a new NFT on the blockchain and records it in the backend.
  * @param nftData The data for the new NFT, including the image file.
  * @param setStatus A callback to update the UI with the current minting status.
