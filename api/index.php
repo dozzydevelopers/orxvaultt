@@ -70,6 +70,10 @@ function http_fetch(string $url): ?string {
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_USERAGENT => 'orxvault-fetch/1.0',
     ]);
+    // Add GitHub token header for higher rate limits when hitting GitHub endpoints
+    if (defined('GITHUB_TOKEN') && GITHUB_TOKEN && (stripos($url, 'api.github.com') !== false || stripos($url, 'raw.githubusercontent.com') !== false)) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: token ' . GITHUB_TOKEN]);
+    }
     $body = curl_exec($ch);
     $err = curl_error($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
