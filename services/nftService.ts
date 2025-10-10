@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import type { Nft } from "../types";
 import { getAuctionOverlay } from './auctionService';
 import { connectRealWallet } from './walletService';
-import { apiFetchWithFallback } from './utils';
+import { apiFetchWithFallback, getNftsApiBase, getExternalApiBase, getDefaultApiBase } from './utils';
 import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
 
 
@@ -13,7 +13,8 @@ import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
  */
 export const getNfts = async (): Promise<Nft[]> => {
     try {
-        const response = await apiFetchWithFallback('/nfts');
+        const nftBase = getNftsApiBase();
+        const response = await apiFetchWithFallback('/nfts', undefined, nftBase ? [nftBase, getExternalApiBase(), getDefaultApiBase()] : undefined);
         if (!response.ok) {
             throw new Error(`Failed to fetch NFTs: ${response.statusText}`);
         }

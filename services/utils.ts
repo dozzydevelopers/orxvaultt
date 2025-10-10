@@ -21,6 +21,11 @@ export const getExternalApiBase = (): string | undefined => {
   return (env.VITE_EXTERNAL_API_BASE_URL as string) || (env.VITE_API_BASE_URL as string) || undefined;
 };
 
+export const getNftsApiBase = (): string | undefined => {
+  const env = getEnv();
+  return (env.VITE_NFTS_API_BASE_URL as string) || undefined;
+};
+
 export const apiFetchWithFallback = async (path: string, init?: RequestInit, bases?: (string | undefined)[]): Promise<Response> => {
   const candidates = (bases && bases.filter(Boolean) as string[]) || [];
   if (!candidates.length) {
