@@ -33,3 +33,6 @@ const ADMIN_AUTO_BOOTSTRAP = (__DIR__ && getenv('ADMIN_AUTO_BOOTSTRAP')) ? (bool
 const ADMIN_EMAIL = __DIR__ && getenv('ADMIN_EMAIL') ? strtolower(getenv('ADMIN_EMAIL')) : '';
 const ADMIN_PASSWORD = __DIR__ && getenv('ADMIN_PASSWORD') ? getenv('ADMIN_PASSWORD') : '';
 const ADMIN_USERNAME = __DIR__ && getenv('ADMIN_USERNAME') ? getenv('ADMIN_USERNAME') : 'Admin';
+
+// Optional GitHub token for higher API rate limits
+const GITHUB_TOKEN = __DIR__ && getenv('GITHUB_TOKEN') ? getenv('GITHUB_TOKEN') : '';
