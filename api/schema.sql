@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   wallet_address VARCHAR(64),
   role VARCHAR(32) DEFAULT 'User',
   avatar_url VARCHAR(255),
+  banner_image_url VARCHAR(255),
   bio TEXT,
   is_verified TINYINT(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

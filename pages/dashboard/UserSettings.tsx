@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { User } from '../../types';
 import { useNotification } from '../../contexts/NotificationContext';
+import { apiFetchWithFallback } from '../../services/utils';
 import { LockClosedIcon, EyeIcon, EyeOffIcon, CopyIcon } from '../../components/Icons';
 
 // Sub-components for better organization
@@ -105,9 +106,33 @@ const UserSettings: React.FC<{ user: User }> = ({ user }) => {
         showNotification('Copied to clipboard!', 'success');
     };
 
-    const handleUpdateProfile = (e: React.FormEvent) => {
+    const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
-        showNotification('Profile updated! (Demo)', 'success');
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) throw new Error('Not authenticated');
+            const payload: Partial<User> = {
+                username,
+                bio,
+            };
+            // image uploads would go to storage and set URLs; for now accept names when present
+            if (bannerFile) payload.bannerImageUrl = bannerFile.name;
+            if (profileFile) payload.avatarUrl = profileFile.name;
+            const res = await apiFetchWithFallback(`/users/${user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    username: payload.username,
+                    bio: payload.bio,
+                    banner_image_url: payload.bannerImageUrl,
+                    avatar_url: payload.avatarUrl,
+                }),
+            });
+            if (!res.ok) throw new Error('Failed to update profile');
+            showNotification('Profile updated!', 'success');
+        } catch (err) {
+            showNotification(err instanceof Error ? err.message : 'Failed to update profile', 'error');
+        }
     };
     
     const handleUpdatePassword = (e: React.FormEvent) => {

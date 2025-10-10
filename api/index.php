@@ -154,7 +154,7 @@ switch (true) {
     case preg_match('#^/users/([^/]+)$#', $sub, $m) && $method === 'PUT':
         $id = strtolower($m[1]);
         $body = read_body_json();
-        $fields = ['email', 'username', 'wallet_address', 'role', 'avatar_url', 'bio'];
+        $fields = ['email', 'username', 'wallet_address', 'role', 'avatar_url', 'banner_image_url', 'bio'];
         $set = [];$vals=[];
         foreach ($fields as $f) if (isset($body[$f])) { $set[] = "$f = ?"; $vals[] = $body[$f]; }
         if (!$set) bad_request('No changes');
