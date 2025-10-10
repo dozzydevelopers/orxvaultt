@@ -230,7 +230,7 @@ const AppContent: React.FC = () => {
                         const creator = users.find(u => u.id.toLowerCase() === creatorId.toLowerCase()) || (currentUser?.id.toLowerCase() === creatorId.toLowerCase() ? currentUser : undefined);
                         return <CreatorProfilePage creatorAddress={creatorId} creatorNfts={creatorNfts} creator={creator} />;
                       }
-                      if (route === '/auctions') return <AuctionPage nfts={memoizedData.auctionNfts} isConnected={!!currentUser} onUpdateBid={() => {}} />;
+                      if (route === '/auctions') return <AuctionPage nfts={memoizedData.auctionNfts} isConnected={!!currentUser} onUpdateBid={() => { refreshData(); }} />;
                       if (route === '/collections') return <CollectionsPage collections={collections} />;
                        if (route.startsWith('/collection/')) {
                         const collectionId = route.split('/')[2];
