@@ -53,38 +53,38 @@ const AuctionNftCard: React.FC<AuctionNftCardProps> = ({ nft, isConnected, onPla
                     <div className="text-sm text-[var(--text-muted)] mb-2">Auction Ends In</div>
                     {nft.auctionEnd && <CountdownTimer targetDate={nft.auctionEnd} />}
                     
-                    <div className="mt-auto pt-4">
-                        {isConnected ? (
-                            <form onSubmit={handlePlaceBid}>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                       <WethIcon />
-                                    </div>
-                                    <input 
-                                        type="number"
-                                        step="0.01"
-                                        value={bidAmount}
-                                        onChange={(e) => setBidAmount(e.target.value)}
-                                        placeholder={`> ${currentBid.toFixed(2)}`}
-                                        className="block w-full bg-[var(--background-primary)] border border-[var(--border-color-light)] rounded-md pl-10 pr-4 py-2 sm:text-sm h-10 disabled:opacity-50"
-                                        disabled
-                                    />
+                <div className="mt-auto pt-4">
+                    {isConnected ? (
+                        <form onSubmit={handlePlaceBid}>
+                            <div className="relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                   <WethIcon />
                                 </div>
-                                {error && <p className="text-xs text-[var(--error-text-body)] mt-1">{error}</p>}
-                                <button
-                                    type="submit"
-                                    disabled
-                                    className="mt-2 w-full bg-[var(--accent-primary)] text-white font-bold py-2 rounded-xl hover:bg-[var(--accent-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Bidding Unavailable
-                                </button>
-                            </form>
-                        ) : (
-                            <div className="text-center text-sm text-[var(--accent-text)] p-2 bg-[var(--accent-primary-translucent)] rounded-md">
-                                Please connect wallet to bid.
+                                <input 
+                                    type="number"
+                                    step="0.01"
+                                    value={bidAmount}
+                                    onChange={(e) => setBidAmount(e.target.value)}
+                                    placeholder={`> ${currentBid.toFixed(2)}`}
+                                    className="block w-full bg-[var(--background-primary)] border border-[var(--border-color-light)] rounded-md pl-10 pr-4 py-2 sm:text-sm h-10"
+                                    min={currentBid + 0.0001}
+                                    required
+                                />
                             </div>
-                        )}
-                    </div>
+                            {error && <p className="text-xs text-[var(--error-text-body)] mt-1">{error}</p>}
+                            <button
+                                type="submit"
+                                className="mt-2 w-full bg-[var(--accent-primary)] text-white font-bold py-2 rounded-xl hover:bg-[var(--accent-secondary)] transition-colors"
+                            >
+                                Place Bid
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="text-center text-sm text-[var(--accent-text)] p-2 bg-[var(--accent-primary-translucent)] rounded-md">
+                            Please connect wallet to bid.
+                        </div>
+                    )}
+                </div>
                 </div>
             </div>
             {showConfirmation && (

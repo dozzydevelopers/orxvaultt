@@ -4,6 +4,8 @@ import AuctionNftCard from '../components/AuctionNftCard';
 import SearchBar from '../components/SearchBar';
 import PromoBanner from '../components/PromoBanner';
 import { PlusIcon } from '../components/Icons';
+import { placeBid } from '../services/auctionService';
+import { useNotification } from '../contexts/NotificationContext';
 
 interface AuctionPageProps {
     nfts: Nft[];
@@ -14,6 +16,7 @@ interface AuctionPageProps {
 const AuctionPage: React.FC<AuctionPageProps> = ({ nfts, isConnected, onUpdateBid }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('my');
+    const { showNotification } = useNotification();
 
     const promoBanner = {
         title: "Collect And Sell<br />Extraordinary NFTs",
@@ -71,7 +74,15 @@ const AuctionPage: React.FC<AuctionPageProps> = ({ nfts, isConnected, onUpdateBi
                                     key={nft.id} 
                                     nft={nft} 
                                     isConnected={isConnected}
-                                    onPlaceBid={onUpdateBid}
+                                    onPlaceBid={(id, bid) => {
+                                        const result = placeBid(nft, bid);
+                                        if (result.accepted) {
+                                            showNotification('Bid placed successfully!', 'success');
+                                            onUpdateBid(id, result.newBid || bid);
+                                        } else {
+                                            showNotification(result.reason || 'Bid rejected', 'error');
+                                        }
+                                    }}
                                 />
                             ))}
                         </div>

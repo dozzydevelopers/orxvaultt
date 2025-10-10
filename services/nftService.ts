@@ -1,6 +1,7 @@
 
 import { ethers } from "ethers";
 import type { Nft } from "../types";
+import { getAuctionOverlay } from './auctionService';
 import { connectRealWallet } from './walletService';
 import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
 
@@ -11,14 +12,17 @@ import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
  */
 export const getNfts = async (): Promise<Nft[]> => {
     try {
-        const response = await fetch('/api/nfts');
+        const response = await fetch('/nfts.json');
         if (!response.ok) {
             throw new Error(`Failed to fetch NFTs: ${response.statusText}`);
         }
         const nfts: Nft[] = await response.json();
-        return nfts;
+        // Merge local auction overlay (bids, end time)
+        const overlay = getAuctionOverlay(nfts);
+        const merged = nfts.map(n => ({ ...n, ...(overlay[n.id] || {}) }));
+        return merged;
     } catch (error) {
-        console.error("Could not fetch NFTs:", error);
+        console.error('Could not fetch NFTs:', error);
         throw new Error(`Could not fetch NFTs:\n${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 };

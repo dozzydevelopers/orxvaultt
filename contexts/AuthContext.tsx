@@ -139,12 +139,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     
                     if (userAccount.walletAddress) {
                         try {
-                            const { provider } = await walletService.connectRealWallet();
-                            const balance = await walletService.getWalletBalance(provider, userAccount.walletAddress);
+                            // Attempt silent public RPC balance fetch first to avoid prompting wallet
+                            const balance = await walletService.getBalanceViaPublicRpc(userAccount.walletAddress);
                             userAccount.balanceEth = balance;
-                            userAccount.isWalletConnected = true;
-                        } catch (walletError) {
-                            console.warn("Could not auto-connect to wallet for balance update, but session is valid.");
+                            userAccount.isWalletConnected = false;
+                        } catch (e) {
                             userAccount.isWalletConnected = false;
                             userAccount.balanceEth = 0;
                         }

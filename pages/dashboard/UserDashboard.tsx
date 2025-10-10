@@ -54,7 +54,7 @@ const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-[var(--background-secondary)] p-6 rounded-2xl space-y-4">
                     <p className="text-[var(--text-faint)] font-medium">Account Balance</p>
-                    <p className="text-4xl font-bold">USDT</p>
+                    <p className="text-4xl font-bold">{user.balanceEth.toFixed(4)} ETH</p>
                     <div className="flex gap-3">
                         <button onClick={() => setIsDepositModalOpen(true)} className="flex-1 bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm">Deposit</button>
                         <a href="/create" className="flex-1 text-center bg-black text-white dark:bg-white dark:text-black font-bold py-2.5 rounded-lg text-sm">Mint</a>
@@ -71,7 +71,7 @@ const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
                             </div>
                             <span className="font-semibold">{user.balanceEth.toFixed(4)} ETH</span>
                         </div>
-                        <span className="text-sm text-[var(--text-faint)]">(USDT)</span>
+                        <span className="text-sm text-[var(--text-faint)]">(est.)</span>
                     </div>
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ const UserDashboard: React.FC<{ user: User, nfts: Nft[] }> = ({ user }) => {
                             </div>
                             <span className="font-semibold">2.5000 WETH</span>
                         </div>
-                        <span className="text-sm text-[var(--text-faint)]">(USDT)</span>
+                        <span className="text-sm text-[var(--text-faint)]">(est.)</span>
                     </div>
                 </div>
             </div>

@@ -7,14 +7,14 @@ import type { User } from '../types';
  */
 export const getUsers = async (): Promise<User[]> => {
     try {
-        const response = await fetch('/api/users');
+        const response = await fetch('/users.json');
         if (!response.ok) {
             throw new Error(`Failed to fetch users: ${response.statusText}`);
         }
         const users: User[] = await response.json();
         return users;
     } catch (error) {
-        console.error("Could not fetch users:", error);
+        console.error('Could not fetch users:', error);
         throw new Error(`Could not fetch users:\n${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 };
@@ -26,12 +26,10 @@ export const getUsers = async (): Promise<User[]> => {
  */
 export const getUserProfile = async (userId: string): Promise<User | null> => {
     try {
-        const response = await fetch(`/api/users/${userId}`);
-         if (!response.ok) {
-            return null;
-        }
-        const user: User = await response.json();
-        return user;
+        // For local JSON fallback, fetch all and filter
+        const users = await getUsers();
+        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        return user || null;
     } catch (error) {
         console.error(`Could not get user profile for ${userId}:`, error);
         return null;
