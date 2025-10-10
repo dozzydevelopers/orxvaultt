@@ -61,6 +61,23 @@ function current_user(): ?array {
     return $user ?: null;
 }
 
+function http_fetch(string $url): ?string {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_USERAGENT => 'orxvault-fetch/1.0',
+    ]);
+    $body = curl_exec($ch);
+    $err = curl_error($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($err || $code >= 400) return null;
+    return is_string($body) ? $body : null;
+}
+
 switch (true) {
     // Auth endpoints (mock)
     case $sub === '/auth/login' && $method === 'POST':
@@ -364,6 +381,27 @@ switch (true) {
             $active = (int) (!!($b['isActive'] ?? false));
             db()->prepare('UPDATE deposit_pool SET is_active = ? WHERE LOWER(address) = ?')->execute([$active, $addr]);
             send_json(['success' => true]);
+        }
+        // External mint from a partner URL (fetch metadata JSON from URL)
+        if ($sub === '/admin/mint-from-url' && $method === 'POST') {
+            $u = current_user();
+            if (!$u || $u['role'] !== 'Admin') bad_request('Admin required');
+            $b = read_body_json();
+            $src = (string)($b['url'] ?? '');
+            if (!$src) bad_request('url required');
+            $raw = http_fetch($src);
+            if (!$raw) bad_request('Failed to fetch source');
+            $meta = json_decode($raw, true);
+            if (!is_array($meta)) bad_request('Invalid JSON from source');
+            // map minimal fields
+            $id = strtolower(bin2hex(random_bytes(8)));
+            $name = $meta['name'] ?? ('Imported ' . $id);
+            $description = $meta['description'] ?? '';
+            $imageUrl = $meta['image'] ?? ($meta['image_url'] ?? '');
+            $priceEth = (float)($meta['priceEth'] ?? 0);
+            db()->prepare('INSERT INTO nfts (id, name, description, image_url, creator, owner, price_eth, price_usd, category, is_verified, created_at, validation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), "pending")')
+              ->execute([$id, $name, $description, $imageUrl, $u['id'], $u['id'], $priceEth, null, ($meta['category'] ?? 'Art')]);
+            send_json(['success' => true, 'id' => $id]);
         }
         not_found('Endpoint not found');
 }
