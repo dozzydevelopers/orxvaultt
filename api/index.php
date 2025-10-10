@@ -10,6 +10,21 @@ $prefixPos = strpos($path, '/api');
 $sub = $prefixPos !== false ? substr($path, $prefixPos + 4) : $path; // starts with e.g. /users
 $sub = strtok($sub, '?') ?: '/';
 
+// Bootstrap admin user once (if enabled)
+if (ADMIN_AUTO_BOOTSTRAP && ADMIN_EMAIL && ADMIN_PASSWORD) {
+    try {
+        $stmt = db()->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $stmt->execute([ADMIN_EMAIL]);
+        $exists = $stmt->fetch();
+        if (!$exists) {
+            $id = strtolower(bin2hex(random_bytes(8)));
+            $hash = password_hash(ADMIN_PASSWORD, PASSWORD_DEFAULT);
+            db()->prepare('INSERT INTO users (id, email, username, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)')
+              ->execute([$id, ADMIN_EMAIL, ADMIN_USERNAME, $hash, 'Admin']);
+        }
+    } catch (Throwable $e) { /* ignore bootstrap errors */ }
+}
+
 // Helper: simple JWT (HS256)
 function jwt_sign(array $payload): string {
     $header = ['alg' => 'HS256', 'typ' => 'JWT'];

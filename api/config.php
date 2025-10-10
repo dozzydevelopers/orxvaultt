@@ -27,3 +27,9 @@ const PLATFORM_ACCOUNT_ID = __DIR__ && getenv('PLATFORM_ACCOUNT_ID') ? getenv('P
 // On-chain validation (optional)
 const ETH_RPC_URL = __DIR__ && getenv('ETH_RPC_URL') ? getenv('ETH_RPC_URL') : 'https://cloudflare-eth.com';
 const PLATFORM_DEPOSIT_ADDRESS = __DIR__ && getenv('PLATFORM_DEPOSIT_ADDRESS') ? strtolower(getenv('PLATFORM_DEPOSIT_ADDRESS')) : '';
+
+// Admin bootstrap (optional)
+const ADMIN_AUTO_BOOTSTRAP = (__DIR__ && getenv('ADMIN_AUTO_BOOTSTRAP')) ? (bool) getenv('ADMIN_AUTO_BOOTSTRAP') : true;
+const ADMIN_EMAIL = __DIR__ && getenv('ADMIN_EMAIL') ? strtolower(getenv('ADMIN_EMAIL')) : '';
+const ADMIN_PASSWORD = __DIR__ && getenv('ADMIN_PASSWORD') ? getenv('ADMIN_PASSWORD') : '';
+const ADMIN_USERNAME = __DIR__ && getenv('ADMIN_USERNAME') ? getenv('ADMIN_USERNAME') : 'Admin';
