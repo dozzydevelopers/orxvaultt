@@ -88,7 +88,7 @@ export const getCurrentUser = async (): Promise<{ user: User }> => {
         walletAddress: '',
         username: 'User',
         role: 'User',
-        avatarUrl: `https://api.dicebear.com/8.x/avataaars/svg?seed=user`;
+        avatarUrl: `https://api.dicebear.com/8.x/avataaars/svg?seed=user`,
         bio: '',
         isVerified: true,
         balanceEth: 0,

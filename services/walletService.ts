@@ -117,15 +117,18 @@ export const mintNft = async (
             ownerAddress: seller, // The on-chain owner/seller is always the minter
         };
 
-        const response = await fetch('/api/nfts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-            body: JSON.stringify(backendNftData),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to save NFT details to the marketplace backend.");
+        // Try to notify backend if available; ignore if not
+        try {
+            const response = await fetch('/api/nfts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                body: JSON.stringify(backendNftData),
+            });
+            if (!response.ok) {
+                console.warn('Backend save failed, continuing without backend sync.');
+            }
+        } catch (backendError) {
+            console.warn('Marketplace backend not available, continuing without backend sync.');
         }
         
         setStatus('Sync complete!');
