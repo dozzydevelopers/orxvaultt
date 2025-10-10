@@ -70,3 +70,26 @@ CREATE TABLE IF NOT EXISTS deposit_pool (
   INDEX (assigned_to),
   INDEX (assigned_until)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Platform ledger for commissions and payouts
+CREATE TABLE IF NOT EXISTS ledger (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  account_id VARCHAR(64),
+  amount_eth DECIMAL(38,18),
+  nft_id VARCHAR(64),
+  created_at DATETIME,
+  INDEX (account_id),
+  INDEX (nft_id),
+  INDEX (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Site settings (single row)
+CREATE TABLE IF NOT EXISTS site_settings (
+  id TINYINT PRIMARY KEY,
+  mint_fee_eth DECIMAL(38,18) DEFAULT 0.05,
+  commission_percent DECIMAL(5,2) DEFAULT 15.00,
+  platform_account_id VARCHAR(64) DEFAULT 'platform'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO site_settings (id, mint_fee_eth, commission_percent, platform_account_id)
+VALUES (1, 0.05, 15.00, 'platform');

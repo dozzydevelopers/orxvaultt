@@ -326,5 +326,29 @@ switch (true) {
             $rel->execute([$addr]);
             send_json(['success' => true]);
         }
+        // Admin endpoints
+        if ($sub === '/admin/ledger' && $method === 'GET') {
+            $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 50;
+            $rows = db()->query('SELECT id, account_id AS accountId, amount_eth AS amountEth, nft_id AS nftId, created_at AS createdAt FROM ledger ORDER BY id DESC LIMIT ' . (int)$limit)->fetchAll();
+            send_json($rows);
+        }
+        if ($sub === '/admin/site-settings' && $method === 'PUT') {
+            $b = read_body_json();
+            db()->prepare('UPDATE site_settings SET mint_fee_eth = ?, commission_percent = ?, platform_account_id = ? WHERE id = 1')
+              ->execute([(float)($b['mintFeeEth'] ?? MINT_FEE_ETH), (float)($b['commissionPercent'] ?? COMMISSION_PERCENT), (string)($b['platformAccountId'] ?? PLATFORM_ACCOUNT_ID)]);
+            $row = db()->query('SELECT mint_fee_eth AS mintFeeEth, commission_percent AS commissionPercent, platform_account_id AS platformAccountId FROM site_settings WHERE id = 1')->fetch();
+            send_json($row);
+        }
+        if ($sub === '/admin/deposit-pool' && $method === 'GET') {
+            $rows = db()->query('SELECT address, assigned_to AS assignedTo, assigned_until AS assignedUntil, is_active AS isActive FROM deposit_pool ORDER BY address')->fetchAll();
+            send_json($rows);
+        }
+        if ($sub === '/admin/deposit-pool/toggle' && $method === 'POST') {
+            $b = read_body_json();
+            $addr = strtolower((string)($b['address'] ?? ''));
+            $active = (int) (!!($b['isActive'] ?? false));
+            db()->prepare('UPDATE deposit_pool SET is_active = ? WHERE LOWER(address) = ?')->execute([$active, $addr]);
+            send_json(['success' => true]);
+        }
         not_found('Endpoint not found');
 }
