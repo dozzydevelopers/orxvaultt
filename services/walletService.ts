@@ -1,5 +1,7 @@
 
 import { ethers } from 'ethers';
+import EthereumProvider from '@walletconnect/ethereum-provider';
+import { WALLETCONNECT_PROJECT_ID } from '../constants';
 import type { Nft } from '../types';
 import { uploadMetadataToIpfs } from './storageService';
 import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
@@ -9,16 +11,29 @@ import { CONTRACT_ADDRESS, MARKETPLACE_ABI } from '../constants';
  * @returns A promise that resolves to the wallet's address and an ethers provider.
  */
 export const connectRealWallet = async (): Promise<{ address: string, provider: ethers.BrowserProvider, signer: ethers.JsonRpcSigner }> => {
-    // FIX: Cast window to any to access the injected ethereum object from MetaMask.
-    if (typeof (window as any).ethereum === 'undefined') {
-        throw new Error('MetaMask is not installed. Please install it to connect your wallet.');
+    // Prefer injected provider (MetaMask/Coinbase Extension)
+    let ethProvider: any = (window as any).ethereum;
+
+    // Fallback to WalletConnect if no injected provider
+    if (!ethProvider) {
+        if (!WALLETCONNECT_PROJECT_ID || WALLETCONNECT_PROJECT_ID === 'YOUR_WC_PROJECT_ID') {
+            throw new Error('No injected wallet found. Set VITE_WALLETCONNECT_PROJECT_ID to enable WalletConnect.');
+        }
+        const wc = await EthereumProvider.init({
+            projectId: WALLETCONNECT_PROJECT_ID,
+            showQrModal: true,
+            chains: [1],
+        });
+        await wc.enable();
+        ethProvider = wc as unknown as any;
     }
-    const provider = new ethers.BrowserProvider((window as any).ethereum);
+
+    const provider = new ethers.BrowserProvider(ethProvider);
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
     if (!address) {
-         throw new Error("No accounts found. Please unlock MetaMask and try again.");
+        throw new Error('No accounts found. Please unlock your wallet and try again.');
     }
     return { address, provider, signer };
 };

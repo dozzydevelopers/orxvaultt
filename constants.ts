@@ -4,6 +4,9 @@ export const API_BASE_URL = '/api';
 
 export const SALES_FEE_PERCENT = 15;
 
+// WalletConnect project id (set VITE_WALLETCONNECT_PROJECT_ID in env for real usage)
+export const WALLETCONNECT_PROJECT_ID = (import.meta as any).env?.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_WC_PROJECT_ID';
+
 // FIX: Added placeholder contract address and admin addresses to resolve import errors.
 export const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const ADMIN_ADDRESSES = [
