@@ -33,24 +33,27 @@ export class VerificationError extends Error {
  * @returns A promise that resolves to the auth token and user object.
  */
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Local mock login: accept any email/password and create a user from users.json
-    const usersRes = await fetch('/users.json');
-    const users: User[] = usersRes.ok ? await usersRes.json() : [];
-    const mockUser = users[0] || {
-        id: '0x0000000000000000000000000000000000000000',
-        walletAddress: '',
-        username: credentials.email.split('@')[0],
-        role: 'User',
-        avatarUrl: `https://api.dicebear.com/8.x/avataaars/svg?seed=${credentials.email}`,
-        bio: '',
-        isVerified: true,
-        balanceEth: 0,
-        isWalletConnected: false,
-      } as User;
+    const response = await fetch(`/api/auth/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+    });
 
-    const token = `mock-token-${Date.now()}`;
-    localStorage.setItem('authToken', token);
-    return { token, user: mockUser };
+    const data = await response.json();
+
+    if (!response.ok) {
+        if (response.status === 403 && data.error === 'email_not_verified') {
+            throw new VerificationError(data.message || 'Email not verified.');
+        }
+        throw new Error(data.message || 'Login failed. Please check your credentials.');
+    }
+
+    const authData: AuthResponse = data;
+    localStorage.setItem('authToken', authData.token);
+    return authData;
 };
 
 /**
@@ -60,8 +63,28 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
  * @returns A promise that resolves to a success message.
  */
 export const signup = async (credentials: SignupCredentials): Promise<SuccessResponse> => {
-    // Local mock signup
-    return { success: true, message: 'Signup successful. Please verify your email.' };
+    const response = await fetch(`/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+        let errorMessage = 'Signup failed. Please try again.';
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+             // Ignore if response is not json
+        }
+        throw new Error(errorMessage);
+    }
+
+    const data: SuccessResponse = await response.json();
+    return data;
 };
 
 /**
@@ -78,23 +101,28 @@ export const logout = (): void => {
 export const getCurrentUser = async (): Promise<{ user: User }> => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-        throw new Error('No auth token found.');
+        throw new Error("No auth token found.");
     }
-    // Return a simple mock user session
-    const usersRes = await fetch('/users.json');
-    const users: User[] = usersRes.ok ? await usersRes.json() : [];
-    const user = users[0] || {
-        id: '0x0000000000000000000000000000000000000000',
-        walletAddress: '',
-        username: 'User',
-        role: 'User',
-        avatarUrl: `https://api.dicebear.com/8.x/avataaars/svg?seed=user`,
-        bio: '',
-        isVerified: true,
-        balanceEth: 0,
-        isWalletConnected: false,
-      } as User;
-    return { user };
+    
+    if (token.startsWith('admin-wallet-session')) {
+         throw new Error("Admin wallet session is not a valid user session for this API.");
+    }
+
+    const response = await fetch(`/api/auth/me`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        localStorage.removeItem('authToken');
+        throw new Error("Session expired or invalid.");
+    }
+    
+    const data: { user: User } = await response.json();
+    return data;
 };
 
 /**
@@ -102,8 +130,21 @@ export const getCurrentUser = async (): Promise<{ user: User }> => {
  * @param token The verification token from the email link.
  * @returns A promise that resolves if the verification is successful.
  */
-export const verifyEmail = async (_token: string): Promise<SuccessResponse> => {
-    return { success: true, message: 'Email verified.' };
+export const verifyEmail = async (token: string): Promise<SuccessResponse> => {
+    const response = await fetch(`/api/auth/verify-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Email verification failed.');
+    }
+    return data;
 };
 
 
@@ -112,8 +153,21 @@ export const verifyEmail = async (_token: string): Promise<SuccessResponse> => {
  * @param email The user's email address.
  * @returns A promise that resolves if the request is successful.
  */
-export const resendVerificationEmail = async (_email: string): Promise<SuccessResponse> => {
-    return { success: true, message: 'Verification email sent.' };
+export const resendVerificationEmail = async (email: string): Promise<SuccessResponse> => {
+    const response = await fetch(`/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend verification email.');
+    }
+    return data;
 };
 
 /**
@@ -124,10 +178,24 @@ export const resendVerificationEmail = async (_email: string): Promise<SuccessRe
 export const linkWallet = async (walletAddress: string): Promise<{ user: User }> => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-        throw new Error('Authentication required to link wallet.');
+        throw new Error("Authentication required to link wallet.");
     }
-    // Update a mock user with wallet link
-    const { user } = await getCurrentUser();
-    const updatedUser: User = { ...user, walletAddress };
-    return { user: updatedUser };
+
+    const response = await fetch(`/api/users/link-wallet`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ walletAddress }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to link wallet.");
+    }
+
+    const data: { user: User } = await response.json();
+    return data;
 };

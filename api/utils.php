@@ -19,8 +19,8 @@ function read_body_json(): array {
     return is_array($data) ? $data : [];
 }
 
+// JSON storage (fallback) — keep for portability, but real DB is preferred
 function storage_path(string $name): string {
-    // points to project root JSON files
     $map = [
         'users' => __DIR__ . '/../users.json',
         'nfts' => __DIR__ . '/../nfts.json',
