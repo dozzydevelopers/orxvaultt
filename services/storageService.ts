@@ -1,17 +1,17 @@
 
 import { NFTStorage, File } from 'nft.storage';
 
-// !!! SECURITY WARNING !!!
-// ========================
-// Exposing API keys on the client-side is a significant security risk.
-// Anyone can view your key and use it, leading to unexpected charges or service suspension.
-// In a production environment, this key MUST be moved to a secure backend or a serverless function.
-// The frontend should call your backend, which then securely communicates with NFT.Storage.
-// This key is included here ONLY for the purpose of making this frontend-only demo functional.
-// DO NOT DEPLOY an application with this key exposed.
-const NFT_STORAGE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDEzMmMyQjRCZjM4YjE4ZkY3Njk4NEI4OThBN2U5QTYzRWU0RThlMkYiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTYyODgyNDUzMzM0MiwibmFtZSI6Ik9yeHZhdWx0IERlbW8ifQ.nIn0F5h3_a_F4p2h_La2j3A_C2s3B2i-2F_N5xY4M-A';
+// Configure via environment. In production, route uploads via backend instead.
+const NFT_STORAGE_TOKEN: string | undefined = (import.meta as any).env?.VITE_NFT_STORAGE_TOKEN;
 
-const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
+let client: NFTStorage | null = null;
+function getClient(): NFTStorage {
+  if (!NFT_STORAGE_TOKEN) {
+    throw new Error('Missing VITE_NFT_STORAGE_TOKEN. Set it in your env or proxy uploads via backend.');
+  }
+  if (!client) client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
+  return client;
+}
 
 /**
  * Uploads NFT metadata to IPFS using the NFT.Storage client.
@@ -30,7 +30,7 @@ export const uploadMetadataToIpfs = async (
     try {
         // Upload the image and get the IPFS URI
         const image = new File([await imageFile.arrayBuffer()], imageFile.name, { type: imageFile.type });
-        const imageCid = await client.storeBlob(image);
+        const imageCid = await getClient().storeBlob(image);
         const imageUrl = `ipfs://${imageCid}`;
 
         // Construct the metadata object
@@ -45,7 +45,7 @@ export const uploadMetadataToIpfs = async (
         };
 
         // Upload the metadata JSON
-        const metadataCid = await client.storeBlob(new Blob([JSON.stringify(metadata)]));
+        const metadataCid = await getClient().storeBlob(new Blob([JSON.stringify(metadata)]));
         const metadataUrl = `ipfs://${metadataCid}`;
 
         return metadataUrl;
