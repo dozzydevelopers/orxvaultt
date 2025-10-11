@@ -88,3 +88,47 @@ function array_find_index_by_id(array $items, string $id): int {
     }
     return -1;
 }
+
+// Email sending helper - uses SMTP if configured, else mail()
+function send_email(string $to, string $subject, string $html, string $fromEmail, string $fromName): bool {
+    // If SMTP_HOST constant is defined and non-empty, attempt raw SMTP
+    if (defined('SMTP_HOST') && SMTP_HOST) {
+        $host = SMTP_HOST;
+        $port = defined('SMTP_PORT') ? SMTP_PORT : 587;
+        $secure = defined('SMTP_SECURE') ? strtolower(SMTP_SECURE) : 'tls';
+        $user = defined('SMTP_USER') ? SMTP_USER : '';
+        $pass = defined('SMTP_PASS') ? SMTP_PASS : '';
+
+        $transport = ($secure === 'ssl') ? 'ssl://' . $host : $host;
+        $fp = @stream_socket_client($transport . ':' . $port, $errno, $errstr, 15, STREAM_CLIENT_CONNECT);
+        if (!$fp) return false;
+        stream_set_timeout($fp, 15);
+        $read = function() use ($fp) { return fgets($fp, 515); };
+        $write = function($cmd) use ($fp) { fwrite($fp, $cmd . "\r\n"); };
+
+        $read();
+        $write('EHLO orxvault'); $read();
+        if ($secure === 'tls') { $write('STARTTLS'); $read(); stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT); $write('EHLO orxvault'); $read(); }
+        if ($user && $pass) {
+            $write('AUTH LOGIN'); $read();
+            $write(base64_encode($user)); $read();
+            $write(base64_encode($pass)); $read();
+        }
+        $write('MAIL FROM: <' . $fromEmail . '>'); $read();
+        $write('RCPT TO: <' . $to . '>'); $read();
+        $write('DATA'); $read();
+        $headers = [];
+        $headers[] = 'From: ' . $fromName . ' <' . $fromEmail . '>';
+        $headers[] = 'MIME-Version: 1.0';
+        $headers[] = 'Content-Type: text/html; charset=UTF-8';
+        $message = 'Subject: ' . $subject . "\r\n" . implode("\r\n", $headers) . "\r\n\r\n" . $html . "\r\n.";
+        $write($message); $read();
+        $write('QUIT');
+        fclose($fp);
+        return true;
+    }
+
+    // Fallback to PHP mail()
+    $headers = "MIME-Version: 1.0\r\nContent-type:text/html;charset=UTF-8\r\nFrom: " . $fromName . " <" . $fromEmail . ">\r\n";
+    return @mail($to, $subject, $html, $headers);
+}
