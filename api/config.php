@@ -16,6 +16,12 @@ const JWT_SECRET = __DIR__ && getenv('JWT_SECRET') ? getenv('JWT_SECRET') : 'cha
 // Email settings (Hostinger often supports PHP mail()).
 const EMAIL_FROM = __DIR__ && getenv('EMAIL_FROM') ? getenv('EMAIL_FROM') : 'no-reply@yourdomain.com';
 const EMAIL_FROM_NAME = __DIR__ && getenv('EMAIL_FROM_NAME') ? getenv('EMAIL_FROM_NAME') : 'Orxvault';
+// SMTP (PHPMailer) - optional. If SMTP_HOST is set, SMTP will be used.
+const SMTP_HOST = __DIR__ && getenv('SMTP_HOST') ? getenv('SMTP_HOST') : '';
+const SMTP_PORT = __DIR__ && getenv('SMTP_PORT') ? (int) getenv('SMTP_PORT') : 587;
+const SMTP_USER = __DIR__ && getenv('SMTP_USER') ? getenv('SMTP_USER') : '';
+const SMTP_PASS = __DIR__ && getenv('SMTP_PASS') ? getenv('SMTP_PASS') : '';
+const SMTP_SECURE = __DIR__ && getenv('SMTP_SECURE') ? getenv('SMTP_SECURE') : 'tls'; // tls or ssl
 
 // Fees
 // Mint/upload fee charged at NFT creation (in ETH units)
