@@ -13,8 +13,9 @@ const APP_URL = __DIR__ && getenv('APP_URL') ? getenv('APP_URL') : 'https://your
 // JWT secret (use a long random string)
 const JWT_SECRET = __DIR__ && getenv('JWT_SECRET') ? getenv('JWT_SECRET') : 'change_this_to_a_long_random_secret_string';
 
-// Email settings (optional). Hostinger often supports PHP mail().
+// Email settings (Hostinger often supports PHP mail()).
 const EMAIL_FROM = __DIR__ && getenv('EMAIL_FROM') ? getenv('EMAIL_FROM') : 'no-reply@yourdomain.com';
+const EMAIL_FROM_NAME = __DIR__ && getenv('EMAIL_FROM_NAME') ? getenv('EMAIL_FROM_NAME') : 'Orxvault';
 
 // Fees
 // Mint/upload fee charged at NFT creation (in ETH units)

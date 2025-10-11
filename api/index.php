@@ -149,13 +149,17 @@ switch (true) {
         $body = read_body_json();
         $email = strtolower(trim($body['email'] ?? ''));
         if (!$email) bad_request('Email required');
-        $u = db()->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $u = db()->prepare('SELECT id, username FROM users WHERE email = ? LIMIT 1');
         $u->execute([$email]);
         $row = $u->fetch();
         if (!$row) bad_request('User not found');
         $token = bin2hex(random_bytes(24));
         db()->prepare('INSERT INTO verification_tokens (user_id, token, created_at) VALUES (?, ?, NOW())')->execute([$row['id'], $token]);
-        // TODO: send email with APP_URL . '/verify-email?token=' . $token
+        // Send simple verification email
+        $verifyUrl = rtrim(APP_URL, '/') . '/verify-email?token=' . urlencode($token);
+        $subject = 'Verify your email';
+        $html = '<html><body style="font-family:Arial,sans-serif"><h2>Verify your email</h2><p>Hello ' . htmlspecialchars($row['username'] ?? 'there') . ',</p><p>Please click the link below to verify your email:</p><p><a href="' . $verifyUrl . '" target="_blank">Verify Email</a></p><p>If you did not request this, please ignore.</p><p>— ' . EMAIL_FROM_NAME . '</p></body></html>';
+        @mail($email, $subject, $html, "MIME-Version: 1.0\r\nContent-type:text/html;charset=UTF-8\r\nFrom: " . EMAIL_FROM_NAME . " <" . EMAIL_FROM . ">\r\n");
         send_json(['success' => true, 'message' => 'Verification email sent.']);
         break;
 
